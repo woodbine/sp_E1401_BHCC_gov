@@ -85,7 +85,8 @@ def convert_mth_strings ( mth_string ):
 #### VARIABLES 1.0
 
 entity_id = "E1401_BHCC_gov"
-urls = ["http://www.brighton-hove.gov.uk/content/council-and-democracy/council-finance/payments-over-250-pounds", "http://www.brighton-hove.gov.uk/content/council-and-democracy/council-finance/payments-over-250-made-previous-years"]
+urls = ["http://www.brighton-hove.gov.uk/content/council-and-democracy/council-finance/payments-over-250-pounds",
+        "http://www.brighton-hove.gov.uk/content/council-and-democracy/council-finance/payments-over-250-made-previous-years"]
 errors = 0
 data = []
 url = 'http://example.com'
@@ -100,45 +101,42 @@ soup = BeautifulSoup(html, 'lxml')
 #### SCRAPE DATA
 
 for url in urls:
-    html = urllib2.urlopen(url)
-    soup = BeautifulSoup(html, 'lxml')
-    block = soup.find('div', attrs = {'class':'field-items'})
-    links = block.findAll('a', href=True)
-    for link in links:
-        csvfile = link.text.strip()
-        if 'CSV' in csvfile:
-            csvMth = csvfile.split('[')[0].strip().split(' ')[-2].strip()
-            csvYr = csvfile.split('[')[0].strip().split(' ')[-1].strip()
-            if '250' in csvMth:
-                csvMth = csvMth.replace('250', '').strip()
-                csvYr = csvfile.split('[')[0].strip().split(' ')[-1].strip()
-            if 'June' in csvYr:
-                csvYr = '2014'
-                csvMth = 'June'
-            url = link['href']
-            csvMth = convert_mth_strings(csvMth.replace('-', '').strip().upper()[:3])
-            data.append([csvYr, csvMth, url])
 
-
-#### STORE DATA 1.0
-
-for row in data:
-    csvYr, csvMth, url = row
-    filename = entity_id + "_" + csvYr + "_" + csvMth
-    todays_date = str(datetime.now())
-    file_url = url.strip()
-
-    valid = validate(filename, file_url)
-
-    if valid == True:
-        scraperwiki.sqlite.save(unique_keys=['l'], data={"l": file_url, "f": filename, "d": todays_date })
-        print filename
+    if 'previous' not in url:
+        html = urllib2.urlopen(url)
+        soup = BeautifulSoup(html, 'lxml')
+        block = soup.find('div', attrs={'class': 'field-items'})
+        links = block.findAll('a', href=True)
+        for link in links:
+            csvfile = link.text.strip()
+            if 'CSV' in csvfile:
+                csvMth = csvfile.split('[')[0].strip().split(' ')[4].strip(u'-\xa0')
+                csvYr = csvfile.split('[')[0].strip().split(' ')[5].strip()
+                if '250' in csvMth:
+                    csvMth = csvMth.replace('250', '').strip()
+                    csvYr = csvfile.split('[')[0].strip().split(' ')[-1].strip()
+                if 'June' in csvYr:
+                    csvYr = '2014'
+                    csvMth = 'June'
+                url = link['href']
+                csvMth = convert_mth_strings(csvMth.replace('-', '').strip().upper()[:3])
+                data.append([csvYr, csvMth, url])
     else:
-        errors += 1
-
-if errors > 0:
-    raise Exception("%d errors occurred during scrape." % errors)
-
-
-#### EOF
-
+        html = urllib2.urlopen(url)
+        soup = BeautifulSoup(html, 'lxml')
+        block = soup.find('div', attrs = {'class':'field-items'})
+        links = block.findAll('a', href=True)
+        for link in links:
+            csvfile = link.text.strip()
+            if 'CSV' in csvfile:
+                csvMth = csvfile.split('[')[0].strip().split(' ')[-2].strip()
+                csvYr = csvfile.split('[')[0].strip().split(' ')[-1].strip()
+                if '250' in csvMth:
+                    csvMth = csvMth.replace('250', '').strip()
+                    csvYr = csvfile.split('[')[0].strip().split(' ')[-1].strip()
+                if 'June' in csvYr:
+                    csvYr = '2014'
+                    csvMth = 'June'
+                url = link['href']
+                csvMth = convert_mth_strings(csvMth.replace('-', '').strip().upper()[:3])
+                data.append([csvYr, csvMth, url])
