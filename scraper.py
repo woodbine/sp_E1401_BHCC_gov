@@ -140,3 +140,26 @@ for url in urls:
                 url = link['href']
                 csvMth = convert_mth_strings(csvMth.replace('-', '').strip().upper()[:3])
                 data.append([csvYr, csvMth, url])
+
+
+#### STORE DATA 1.0
+
+for row in data:
+    csvYr, csvMth, url = row
+    filename = entity_id + "_" + csvYr + "_" + csvMth
+    todays_date = str(datetime.now())
+    file_url = url.strip()
+
+    valid = validate(filename, file_url)
+
+    if valid == True:
+        scraperwiki.sqlite.save(unique_keys=['l'], data={"l": file_url, "f": filename, "d": todays_date })
+        print filename
+    else:
+        errors += 1
+
+if errors > 0:
+    raise Exception("%d errors occurred during scrape." % errors)
+
+
+#### EOF
