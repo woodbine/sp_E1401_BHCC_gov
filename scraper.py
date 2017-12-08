@@ -101,7 +101,6 @@ soup = BeautifulSoup(html, 'lxml')
 #### SCRAPE DATA
 
 for url in urls:
-
     if 'previous' not in url:
         html = urllib2.urlopen(url)
         soup = BeautifulSoup(html, 'lxml')
@@ -110,16 +109,10 @@ for url in urls:
         for link in links:
             csvfile = link.text.strip()
             if 'CSV' in csvfile:
-                csvMth = csvfile.split('[')[0].strip().split(' ')[4].strip(u'-\xa0')
-                csvYr = csvfile.split('[')[0].strip().split(' ')[5].strip()
-                if '250' in csvMth:
-                    csvMth = csvMth.replace('250', '').strip()
-                    csvYr = csvfile.split('[')[0].strip().split(' ')[-1].strip()
-                if 'June' in csvYr:
-                    csvYr = '2014'
-                    csvMth = 'June'
+                csvMth = csvfile.split('-')[-1].strip()[:3]
+                csvYr = csvfile.split('-')[-1].split('(')[0].strip()[-4:]
                 url = link['href']
-                csvMth = convert_mth_strings(csvMth.replace('-', '').strip().upper()[:3])
+                csvMth = convert_mth_strings(csvMth.upper())
                 data.append([csvYr, csvMth, url])
     else:
         html = urllib2.urlopen(url)
@@ -129,17 +122,24 @@ for url in urls:
         for link in links:
             csvfile = link.text.strip()
             if 'CSV' in csvfile:
-                csvMth = csvfile.split('[')[0].strip().split(' ')[-2].strip()
-                csvYr = csvfile.split('[')[0].strip().split(' ')[-1].strip()
-                if '250' in csvMth:
-                    csvMth = csvMth.replace('250', '').strip()
+                if '[' in csvfile:
+                    csvMth = csvfile.split('[')[0].strip().split(' ')[-2].strip()
                     csvYr = csvfile.split('[')[0].strip().split(' ')[-1].strip()
-                if 'June' in csvYr:
-                    csvYr = '2014'
-                    csvMth = 'June'
-                url = link['href']
-                csvMth = convert_mth_strings(csvMth.replace('-', '').strip().upper()[:3])
-                data.append([csvYr, csvMth, url])
+                    if '250' in csvMth:
+                        csvMth = csvMth.replace('250', '').strip()
+                        csvYr = csvfile.split('[')[0].strip().split(' ')[-1].strip()
+                    if 'June' in csvYr:
+                        csvYr = '2014'
+                        csvMth = 'June'
+                    url = link['href']
+                    csvMth = convert_mth_strings(csvMth.replace('-', '').strip().upper()[:3])
+                    data.append([csvYr, csvMth, url])
+                else:
+                    csvMth = csvfile.split('-')[-1].strip()[:3]
+                    csvYr = csvfile.split('-')[-1].split('(')[0].strip()[-4:]
+                    url = link['href']
+                    csvMth = convert_mth_strings(csvMth.upper())
+                    data.append([csvYr, csvMth, url])
 
 
 #### STORE DATA 1.0
